@@ -58,4 +58,5 @@ end
 
 %% Cálculo de las varianzas
 E = [Ed Er];
-C = cov(E)
+Q = cov(E);
+save('Q','Q')

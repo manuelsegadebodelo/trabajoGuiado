@@ -38,3 +38,9 @@ end
 %% Cálculo de las varianzas
 C = cov(E)
 Cu = cov(Eu)
+R = [C(1,1) 0 0 0 0;
+     0 C(2,2) 0 0 0;
+     0 0 Cu 0 0;
+     0 0 0 Cu 0;
+     0 0 0 0 Cu];
+save('R', 'R')
