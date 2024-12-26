@@ -43,7 +43,7 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             apoloMoveMRobot('Marvin', [v, w], dt);
             apoloUpdate();
 
-            % Cojer la odometria
+            % Coger la odometria
             %odometry = apoloGetOdometry('Marvin');
             % Actualizar la posición y orientación del robot
             
@@ -53,9 +53,9 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             theta = theta + w * dt;
             odometria_history(end + 1, :) = [y,x,theta];
             
-            % Cojer odometria
+            % Coger odometria
             %x = odometry(2);
-            % y = odometry(1);
+            %y = odometry(1);
             %theta = odometry(3);
             % Aqui sustituir x,y,z por los valores de la odometria y
             % acutalizar con el filtro de kalman
