@@ -1,32 +1,20 @@
 load("calibracion\Q.mat");
 load("calibracion\R.mat");
-% Definimos una trayectoria circular
-velocidadL = 0.2;  % Velocidad lineal 0.2 m/seg
-timestep = 0.5;  % Actualizacion de sensores
-distanciatotal = 4*pi; % en metros.. radio de 2 metros
-numerodepasos = ceil(distanciatotal/(velocidadL*timestep));
-velocidadA = 2*pi/(numerodepasos*timestep); % Velocidad angular
 
 % Varianza del ruido del proceso 
 Qk_1 = Q;
 
-for k = 1:2*numerodepasos
-    trayectoriaD(k) = velocidadL*timestep;
-    trayectoriaB(k) = velocidadA*timestep;
-    trayectoriaDRuido(k) = velocidadL*timestep + sqrt(Qd)*randn;
-    trayectoriaBRuido(k) = velocidadA*timestep + sqrt(Qb)*randn;
-end
-
 % Inicializamos la posición inicial y su covarianza
-xini = 5;
-yini = 2;
-thetaini = 0;
+pos0 = apoloGetLocationMRobot('Marvin');
+xini = pos0(1);
+yini = pos0(2);
+thetaini = pos0(4);
 Xrealk = [xini; yini; thetaini];
-Xk = [6; 3; pi];
+Xk = [; 3; pi];
 
-Pxini = 0.001;
-Pyini = 0.001;
-Pthetaini = 0.001;
+Pxini = 0.0;
+Pyini = 0.0;
+Pthetaini = 0.0;
 Pk = [Pxini 0 0; 0 Pyini 0 ; 0 0 Pthetaini];
 
 % Varianza en la medida
