@@ -23,6 +23,6 @@ apoloResetOdometry('Marvin');
 apoloUpdate();
 
 % Llamar a la función para seguir el camino con las orientaciones especificadas
-[x_history, y_history, t_history, v_history, w_history, odometria_history, laser_history] = controlador_diferencial_reactivo(pos_inicial, puntos_objetivo);
+[x_history, y_history, t_history, v_history, w_history, odometria_history, laser_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo);
 
 graficar_trayectoria(t_history, x_history, y_history, v_history, w_history,laser_history, puntos_objetivo)
