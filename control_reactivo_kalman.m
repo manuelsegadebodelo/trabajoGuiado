@@ -73,7 +73,7 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             odometria_history(end + 1, :)=odometry;
             % Medición del sistema
             % Balizas
-            Zk = apoloGetLaserLandMarck();  % Este sería el dato que recibe del sensor
+            Zk = apoloGetLaserLandMark();  % Este sería el dato que recibe del sensor
             
             % Llamada al filtrso de Kalman para actualizar la estimación de la posición
             [Xk, Pk] = filtro_kalman(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);

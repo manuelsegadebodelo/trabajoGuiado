@@ -57,6 +57,7 @@ for i = 1:2 %cambia la velocidad
 end
 
 %% Cálculo de las varianzas
-E = [Ed Er];
-Q = cov(E);
+Q = [cov(Ed) 0 0;
+    0 cov(Ed) 0;
+    0 0 cov(Er)];
 save('Q','Q')

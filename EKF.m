@@ -1,6 +1,4 @@
-load("calibracion\Q.mat");
-load("calibracion\R.mat");
-
+function EKF[]
 % Varianza del ruido del proceso 
 Qk_1 = Q;
 
@@ -29,16 +27,8 @@ t3x = 11;
 t3y = 3;
 
 % Algoritmo
-Ktotal = zeros(3);      
+Ktotal = zeros(3);   
 for l = 1:length(trayectoriaD)
-    % Solo para el simulador
-    XrealkAUX = Xrealk;
-    
-    % Avance real del robot
-    Xrealk(1) = XrealkAUX(1) + trayectoriaD(l)*cos(XrealkAUX(3)+(trayectoriaB(l)/2));
-    Xrealk(2) = XrealkAUX(2) + trayectoriaD(l)*sin(XrealkAUX(3)+(trayectoriaB(l)/2));
-    Xrealk(3) = XrealkAUX(3) + trayectoriaB(l);
-    Xreal(:,l) = Xrealk;  % Para mantener una historia del recorrido
 
     % Observacion de las balizas
     Zk = [(atan2(t1y-Xrealk(2),t1x-Xrealk(1)) - Xrealk(3) + sqrt(R1)*randn);
