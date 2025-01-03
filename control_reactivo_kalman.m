@@ -1,4 +1,4 @@
-function [x_history, y_history, t_history, v_history, w_history, odometria_history, laser_history] = controlador_diferencial_reactivo(pos_inicial, puntos_objetivo)
+function [x_history, y_history, t_history, v_history, w_history, odometria_history, ultrasonic_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo)
     % Controlador diferencial para un robot que sigue varios puntos objetivo con control reactivo.
 
     % Parámetros del robot
@@ -21,9 +21,9 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     y_history = y;
     v_history = 0;
     w_history = 0;
-    odometry = [y, x, theta];
+    odometry = [x, y, theta];
     odometria_history = odometry;
-    laser_history = [0, 0, 0];
+    ultrasonic_history = [0, 0, 0];
 
     % Cargar parámetros de Kalman
     load("Q.mat");
@@ -40,19 +40,29 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     Pk = eye(3);  % Covarianza inicial (simplificada)
 
     % Iterar sobre todos los puntos objetivo
+    iter=0;
     for i = 1:size(puntos_objetivo, 1)
         x_goal = puntos_objetivo(i, 1);
         y_goal = puntos_objetivo(i, 2);
+        
+
 
         fprintf('Dirigiéndose al punto (%.2f, %.2f)\n', x_goal, y_goal);
         while true
+        iter= iter +1 ;
+        fprintf("Iteracion: %.2f",iter);
+        if iter> 70
+            break;
+        end
             % Calcular errores y controlar el movimiento
             [error_x, error_y, rho, error_theta] = calcular_errores(x, y, theta, x_goal, y_goal);
-            laser_data = apoloGetAllultrasonicSensors('Marvin');
-            laser_history(end + 1, :) = laser_data;
+
+            % Calcula la distancia a los obstaculos
+            ultrasonics = apoloGetAllultrasonicSensors('Marvin');
+            ultrasonic_history(end + 1, :) = ultrasonics;
 
             % Control reactivo para evitar obstáculos
-            [v, w, integral_error_v, integral_error_theta] = control_reactivo(rho, error_theta, laser_data, v_max, w_max, v_min, dt, integral_error_v, integral_error_theta);
+            [v, w, integral_error_v, integral_error_theta] = control_reactivo(rho, error_theta, ultrasonics, v_max, w_max, v_min, dt, integral_error_v, integral_error_theta);
 
             % Mueve el robot en la simulación y actualiza su posición
             apoloMoveMRobot('Marvin', [v, w], dt);
@@ -60,18 +70,22 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
 
             % Cojer la odometría
             odometry = apoloGetOdometry('Marvin');
-            
+            odometria_history(end + 1, :)=odometry;
             % Medición del sistema
-            Zk = laser_data;  % Este sería el dato que recibe del sensor
+            % Balizas
+            Zk = apoloGetLaserLandMarck();  % Este sería el dato que recibe del sensor
             
-            % Llamada al filtro de Kalman para actualizar la estimación de la posición
+            % Llamada al filtrso de Kalman para actualizar la estimación de la posición
             [Xk, Pk] = filtro_kalman(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);
 
             % Extraer las posiciones estimadas de Xk
-            x = Xk(1);
-            y = Xk(2);
-            theta = Xk(3);
-
+%             x = x + v * cos(theta) * dt;
+%             y = y + v * sin(theta) * dt;
+%             theta = theta + w * dt;
+               x=odometry(1);
+               y=odometry(2);
+               theta=odometry(3);
+            
             % Almacenar datos históricos
             [t_history, x_history, y_history, v_history, w_history] = registrar_datos(t_history, x_history, y_history, v_history, w_history, dt, x, y, v, w);
 
@@ -100,7 +114,7 @@ function [error_x, error_y, rho, error_theta] = calcular_errores(x, y, theta, x_
     error_theta = mod(theta_goal - theta + pi, 2 * pi) - pi;
 end
 
-function [v, w, integral_error_v,integral_error_theta] = control_reactivo(rho, error_theta, laser_data, v_max, w_max, v_min, dt, integral_error_v,integral_error_theta)
+function [v, w, integral_error_v,integral_error_theta] = control_reactivo(rho, error_theta, ultrasonics, v_max, w_max, v_min, dt, integral_error_v,integral_error_theta)
     % Control reactivo basado en atractores y repulsores utilizando sensores láser.
 
     % Parámetros del controlador
@@ -108,20 +122,21 @@ function [v, w, integral_error_v,integral_error_theta] = control_reactivo(rho, e
     Ki_v = 0.05;        % Ganancia integral para la velocidad lineal
     Kp_w = 5.0;        % Ganancia proporcional para la velocidad angular
     Ki_w = 0.02;       % Ganancia integral para la velocidad angular
+    
     % Calcular repulsión de obstáculos
-    [repulsion_x, repulsion_y] = calcular_repulsion(laser_data);
+    [repulsion_x, repulsion_y] = calcular_repulsion(ultrasonics);
 
     % Control de colisión
-    if repulsion_x < 1 && (laser_data(2) < 1 || laser_data(3) < 1)
+    if repulsion_x > 1 && (ultrasonics(2) < 1 || ultrasonics(3) < 1)
         
         % Colisión inminente: detenerse y girar
         v = 0;
 
         % Decidir dirección de giro basada en las lecturas de los sensores laterales
-        if laser_data(2) < laser_data(3)
-            w = w_max;  % Girar a la derecha si el obstáculo está más cerca en el lado izquierdo
+        if ultrasonics(2) < ultrasonics(3)
+            w = w_max/2;  % Girar a la derecha si el obstáculo está más cerca en el lado izquierdo
         else
-            w = -w_max; % Girar a la izquierda si el obstáculo está más cerca en el lado derecho
+            w = -w_max/2; % Girar a la izquierda si el obstáculo está más cerca en el lado derecho
         end
     else
         if repulsion_x > 1 || repulsion_y > 1
@@ -143,11 +158,11 @@ function [v, w, integral_error_v,integral_error_theta] = control_reactivo(rho, e
     end
 end
 
-function [repulsion_x, repulsion_y] = calcular_repulsion(laser_data)
+function [repulsion_x, repulsion_y] = calcular_repulsion(ultrasonics)
     % Calcula el campo de repulsión basado en los 3 sensores láser.
     repulsion_x = 0;
     repulsion_y = 0;
-    sensor_distances = [laser_data(1), laser_data(2), laser_data(3)];
+    sensor_distances = [ultrasonics(1), ultrasonics(2), ultrasonics(3)];
     sensor_angles = [0, pi/4, -pi/4];
 
     for j = 1:length(sensor_distances)
