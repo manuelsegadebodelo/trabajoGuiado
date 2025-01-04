@@ -30,34 +30,36 @@ t3y = 3;
 Ktotal = zeros(3);   
 for l = 1:length(trayectoriaD)
 
-    % Observacion de las balizas
-    Zk = [(atan2(t1y-Xrealk(2),t1x-Xrealk(1)) - Xrealk(3) + sqrt(R1)*randn);
-          (atan2(t2y-Xrealk(2),t2x-Xrealk(1)) - Xrealk(3) + sqrt(R2)*randn);
-          (atan2(t3y-Xrealk(2),t3x-Xrealk(1)) - Xrealk(3) + sqrt(R3)*randn)];
+    % Observación de las balizas
+    Zk = apoloGetLaserLandMarks();
           
     % Para acortar el nombre de la variable
-    Uk = [trayectoriaDRuido(l); trayectoriaBRuido(l)];
-
+    Uk = apoloGetOdometry('Marvin');
+    apoloResetOdometry('Marvin');
     % Nuevo ciclo, k-1 = k.
     Xk_1 = Xk;
     Pk_1 = Pk;
     
     % Prediccion del estado
-    X_k = [(Xk_1(1) + Uk(1)*cos(Xk_1(3)+(Uk(2)/2)));
-           (Xk_1(2) + Uk(1)*sin(Xk_1(3)+(Uk(2)/2)));
-           (Xk_1(3) + Uk(2))];
-    Ak = [1 0 (-Uk(1)*sin(Xk_1(3)+Uk(2)/2));
-          0 1 (Uk(1)*cos(Xk_1(3)+Uk(2)/2));
-          0 0 1                             ];
-    Bk = [(cos(Xk_1(3)+Uk(2)/2)) (-0.5*Uk(1)*sin(Xk_1(3)+Uk(2)/2));
-          (sin(Xk_1(3)+Uk(2)/2)) (0.5*Uk(1)*cos(Xk_1(3)+Uk(2)/2));
-           0                     1                                 ];
+    X_k = [(Xk_1(1) + Uk(1));
+           (Xk_1(2) + Uk(2));
+           (Xk_1(3) + Uk(3))];
+
+    Ak = [1 0 0;
+          0 1 0;
+          0 0 1];
+    Bk = [1 0 0;
+          0 1 0;
+          0 0 1];
+
     P_k = Ak*Pk_1*((Ak)') + Bk*Qk_1*((Bk)');
 
-    % Prediccion de la medida
+    % Predicción de la medida. Depende de la posicion de las balizas y de la
+    %predicción del estado
     Zk_ = [(atan2(t1y-X_k(2),t1x-X_k(1)) - X_k(3));
           (atan2(t2y-X_k(2),t2x-X_k(1)) - X_k(3));
           (atan2(t3y-X_k(2),t3x-X_k(1)) - X_k(3))];
+    %Matriz de observación
     Hk = [((t1y-X_k(2))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-(t1x-X_k(1))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-1);
           ((t2y-X_k(2))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-(t2x-X_k(1))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-1);   
           ((t3y-X_k(2))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-(t3x-X_k(1))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-1)];
@@ -85,67 +87,3 @@ for l = 1:length(trayectoriaD)
     Pacumulado(2,l) = Pk(2,2);
     Pacumulado(3,l) = Pk(3,3);
 end 
-
-% Representación gráfica
-figure(1);
-subplot(2,2,1);
-axis([0 12 0 9])
-hold on
-
-for m = 1:length(trayectoriaD)
-    plot(Xreal(1,m),Xreal(2,m),'.k', Xestimado(1,m),Xestimado(2,m),'.r');
-end
-legend('Movimiento Real','Estimación')
-
-% Balizas
-plot(t1x,t1y,'sk');
-plot(t2x,t2y,'sk');
-plot(t3x,t3y,'sk');
-xlabel ('X (m)')
-ylabel ('Y (m)')
-
-subplot(2,2,2);
-plot(Xreal(1,:));
-hold on
-plot(Xestimado(1,:),'g');
-xlabel ('t (muestras)')
-ylabel ('X (m)')
-
-subplot(2,2,3);
-plot(Xreal(2,:));
-hold on
-plot(Xestimado(2,:),'g');
-xlabel ('t (muestras)')
-ylabel ('Y (m)')
-
-subplot(2,2,4);
-plot(Xreal(3,:));
-hold on
-plot(Xestimado(3,:),'g');
-xlabel ('t (muestras)')
-ylabel ('\theta (rad)')
-hold off
-
-figure(2);
-subplot(3,1,1);
-axis([0 12 0 9])
-plot(Pacumulado(1,:),'b');
-xlabel ('t (muestras)')
-ylabel ('Varianza X (m2)')
-hold on
-
-subplot(3,1,2);
-axis([0 12 0 9])
-plot(Pacumulado(2,:),'b');
-xlabel ('t (muestras)')
-ylabel ('Varianza Y (m2)')
-
-subplot(3,1,3);
-axis([0 12 0 9])
-plot(Pacumulado(3,:),'b');
-xlabel ('t (muestras)')
-ylabel ('Varianza \theta (rad2)')
-
-pause
-close all
-clear all
