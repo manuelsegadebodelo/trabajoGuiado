@@ -14,7 +14,12 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     theta = pos_inicial(3);
     integral_error_v = 0;
     integral_error_theta = 0;
+
+    landmarks = [1 0; 2 3];
+    nLandmarks = size(landmarks,1);
     
+    
+
     % Historias para almacenar datos
     t_history = 0;
     x_history = x;
@@ -30,6 +35,8 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     load("R.mat");
     Qk_1 = Q;
     Rk = R;
+    Hk = zeros(nLandmarks, 3);
+    Zk = zeros(2*nLandmarks, 1);
 
     % Inicializamos la posición inicial y su covarianza
     pos0 = apoloGetLocationMRobot('Marvin');
@@ -44,8 +51,6 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     for i = 1:size(puntos_objetivo, 1)
         x_goal = puntos_objetivo(i, 1);
         y_goal = puntos_objetivo(i, 2);
-        
-
 
         fprintf('Dirigiéndose al punto (%.2f, %.2f)\n', x_goal, y_goal);
         while true
@@ -68,24 +73,27 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             apoloMoveMRobot('Marvin', [v, w], dt);
             apoloUpdate();
 
-            % Cojer la odometría
-            odometry = apoloGetOdometry('Marvin');
-            odometria_history(end + 1, :)=odometry;
+            % Coger la odometría
+            Uk = apoloGetOdometry('Marvin');
+            odometria_history(end + 1, :) = Uk;
             % Medición del sistema
             % Balizas
-            Zk = apoloGetLaserLandMark();  % Este sería el dato que recibe del sensor
+            % Zk = apoloGetLaserLandMark();  % Este sería el dato que recibe del sensor
             
             % Llamada al filtrso de Kalman para actualizar la estimación de la posición
+            run('EKF.m');
             [Xk, Pk] = filtro_kalman(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);
 
             % Extraer las posiciones estimadas de Xk
 %             x = x + v * cos(theta) * dt;
 %             y = y + v * sin(theta) * dt;
 %             theta = theta + w * dt;
-               x=odometry(1);
-               y=odometry(2);
-               theta=odometry(3);
-            
+               % x=odometry(1);
+               % y=odometry(2);
+               % theta=odometry(3);
+            x = Xk(1);
+            y = Xk(2);
+            theta = Xk(3);
             % Almacenar datos históricos
             [t_history, x_history, y_history, v_history, w_history] = registrar_datos(t_history, x_history, y_history, v_history, w_history, dt, x, y, v, w);
 

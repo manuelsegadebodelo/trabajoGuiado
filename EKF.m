@@ -1,43 +1,42 @@
-function EKF[]
 % Varianza del ruido del proceso 
-Qk_1 = Q;
-nLandmarks = 5;
-Zk = zeros(nLandmarks, 2);
-% Inicializamos la posición inicial y su covarianza
-pos0 = apoloGetLocationMRobot('Marvin');
-xini = pos0(1);
-yini = pos0(2);
-thetaini = pos0(4);
-Xk = [xini; yini; thetaini];
+% Qk_1 = Q;
 
-Pxini = 0.0;
-Pyini = 0.0;
-Pthetaini = 0.0;
-Pk = [Pxini 0 0; 0 Pyini 0 ; 0 0 Pthetaini];
+%N balizas y posición
+% landmarks = [1 0; 2 3];
+% nLandmarks = size(landmarks,1);
+
+% Hk = zeros(nLandmarks, 3);
+% Zk = zeros(2*nLandmarks, 1);
+% Inicializamos la posición inicial y su covarianza
+% pos0 = apoloGetLocationMRobot('Marvin');
+% xini = pos0(1);
+% yini = pos0(2);
+% thetaini = pos0(4);
+% Xk = [xini; yini; thetaini];
+
+% Pxini = 0.0;
+% Pyini = 0.0;
+% Pthetaini = 0.0;
+% Pk = [Pxini 0 0; 0 Pyini 0 ; 0 0 Pthetaini];
 
 % Varianza en la medida
-Rk = R;
-
-% Posición de las balizas
-t1x = 4;
-t1y = 8;
-t2x = 1;
-t2y = 1;
-t3x = 11;
-t3y = 3;
+% Rk = R;
 
 % Algoritmo
-Ktotal = zeros(3);   
-for l = 1:length(trayectoriaD)
+%Ktotal = zeros(3);   
+% for l = 1:length(trayectoriaD)
+
+    angle_col = zeros(nLandmarks, 1);
+    distance_col = zeros(nLandmarks, 1);
 
     % Observación de las balizas
-    tempZ = apoloGetLandMarks('LMS100');
-    angle_col(tempZ.id) = tempZ.angle;
-    distance_col(tempZ.id) = tempZ.distance;
-    Zk = [distance_col; angle_col];
+    tempZ = apoloGetLaserLandMarks('LMS100');
+    angle_col(tempZ.id) = tempZ.angle';
+    distance_col(tempZ.id) = tempZ.distance';
+    Zk(1:2:end) = distance_col;
+    Zk(2:2:end) = angle_col;
     
     % Para acortar el nombre de la variable
-    Uk = apoloGetOdometry('Marvin');
     apoloResetOdometry('Marvin');
     % Nuevo ciclo, k-1 = k.
     Xk_1 = Xk;
@@ -57,30 +56,49 @@ for l = 1:length(trayectoriaD)
 
     P_k = Ak*Pk_1*((Ak)') + Bk*Qk_1*((Bk)');
 
-    % Predicción de la medida. Depende de la posicion de las balizas y de la
+    % Predicción de la medida. Depende de la posición de las balizas y de la
     %predicción del estado
-    Zk_ = [(atan2(t1y-X_k(2),t1x-X_k(1)) - X_k(3));
-          (atan2(t2y-X_k(2),t2x-X_k(1)) - X_k(3));
-          (atan2(t3y-X_k(2),t3x-X_k(1)) - X_k(3))];
-    %Matriz de observación
-    Hk = [((t1y-X_k(2))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-(t1x-X_k(1))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-1);
-          ((t2y-X_k(2))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-(t2x-X_k(1))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-1);   
-          ((t3y-X_k(2))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-(t3x-X_k(1))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-1)];
+    for i = 1:nLandmarks
+        xL = landmarks(i,1);
+        yL = landmarks(i,2);
+        d = sqrt((xL-X_k(1))^2+(yL-X_k(2))^2);
+        theta = atan2(yL-X_k(2), xL-X_k(1)) - X_k(3);
 
-    % Comparacion
-    Yk = Zk-Zk_;
-    for r=1:3
-        if Yk(r)>pi
-            Yk(r) = Yk(r) - 2*pi;
+        if abs(theta) <= theta0
+            Z = [d; theta];
+            H(2*i-1) = [(X_k(1)-xL)/d (X_k(2)-yL)/d 0];
+            H(2*i) = [(xL-X_k(1)/d^2) (yL-X_k(2))/d^2 -1];
+        else
+            Z = [0; 0];
+            H(2*i-1) = [0 0 0];
+            H(2*i) = [0 0 0];
         end
-        if Yk(r)<(-pi)
-            Yk(r) = Yk(r) + 2*pi;
+        Zk_ = [Zk_; Z];
+        Hk(i) = H_;
+    end
+    % Zk_ = [(atan2(t1y-X_k(2),t1x-X_k(1)) - X_k(3));
+    %       (atan2(t2y-X_k(2),t2x-X_k(1)) - X_k(3));
+    %       (atan2(t3y-X_k(2),t3x-X_k(1)) - X_k(3))];
+    %Matriz de observación
+    % Hk = [((t1y-X_k(2))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-(t1x-X_k(1))/((t1x-X_k(1))^2+(t1y-X_k(2))^2)) (-1);
+    %       ((t2y-X_k(2))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-(t2x-X_k(1))/((t2x-X_k(1))^2+(t2y-X_k(2))^2)) (-1);   
+    %       ((t3y-X_k(2))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-(t3x-X_k(1))/((t3x-X_k(1))^2+(t3y-X_k(2))^2)) (-1)];
+
+    % Comparación
+    Yk = Zk-Zk_;
+    for r=1:nLandmarks %por si el ángulo se pasa de rosca
+        if Yk(2*r)>pi
+            Yk(2*r) = Yk(2*r) - 2*pi;
+        end
+        if Yk(2*r)<(-pi)
+            Yk(2*r) = Yk(2*r) + 2*pi;
         end
     end
+
     Sk = Hk*P_k*((Hk)') + Rk;
     Wk = P_k*((Hk)')*inv(Sk);
 
-    % Correccion
+    % Corrección
     Xk = X_k + Wk*Yk;
     Pk = (eye(3)-Wk*Hk)*P_k;
     
@@ -89,4 +107,4 @@ for l = 1:length(trayectoriaD)
     Pacumulado(1,l) = Pk(1,1);
     Pacumulado(2,l) = Pk(2,2);
     Pacumulado(3,l) = Pk(3,3);
-end 
+% end 
