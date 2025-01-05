@@ -1,14 +1,14 @@
 function EKF[]
 % Varianza del ruido del proceso 
 Qk_1 = Q;
-
+nLandmarks = 5;
+Zk = zeros(nLandmarks, 2);
 % Inicializamos la posición inicial y su covarianza
 pos0 = apoloGetLocationMRobot('Marvin');
 xini = pos0(1);
 yini = pos0(2);
 thetaini = pos0(4);
-Xrealk = [xini; yini; thetaini];
-Xk = [; 3; pi];
+Xk = [xini; yini; thetaini];
 
 Pxini = 0.0;
 Pyini = 0.0;
@@ -31,8 +31,11 @@ Ktotal = zeros(3);
 for l = 1:length(trayectoriaD)
 
     % Observación de las balizas
-    Zk = apoloGetLaserLandMarks();
-          
+    tempZ = apoloGetLandMarks('LMS100');
+    angle_col(tempZ.id) = tempZ.angle;
+    distance_col(tempZ.id) = tempZ.distance;
+    Zk = [distance_col; angle_col];
+    
     % Para acortar el nombre de la variable
     Uk = apoloGetOdometry('Marvin');
     apoloResetOdometry('Marvin');
