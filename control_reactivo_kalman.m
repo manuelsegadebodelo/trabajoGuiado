@@ -17,7 +17,7 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
 
     landmarks = [1 0; 2 3];
     nLandmarks = size(landmarks,1);
-    
+    theta0 = 3*pi/4;
     
 
     % Historias para almacenar datos
@@ -34,9 +34,6 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     load("Q.mat");
     load("R.mat");
     Qk_1 = Q;
-    Rk = R;
-    Hk = zeros(nLandmarks, 3);
-    Zk = zeros(2*nLandmarks, 1);
 
     % Inicializamos la posición inicial y su covarianza
     pos0 = apoloGetLocationMRobot('Marvin');
