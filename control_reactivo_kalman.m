@@ -29,8 +29,8 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     ultrasonic_history = [0, 0, 0];
 
     % Cargar parámetros de Kalman
-    load("Q.mat");
-    load("R.mat");
+    load("calibracion/Q.mat");
+    load("calibracion/R.mat");
 
     % Inicializamos la posición inicial y su covarianza
     pos0 = apoloGetLocationMRobot('Marvin');
@@ -73,7 +73,7 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             
             % Llamada al filtro de Kalman para actualizar la estimación de la posición
             [Xk, Pk] = EKF(Xk, Pk, Uk, Q, R);
-
+             
             x = Xk(1);
             y = Xk(2);
             theta = Xk(3);

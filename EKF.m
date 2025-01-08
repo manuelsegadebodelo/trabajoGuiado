@@ -12,8 +12,8 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     Zk_=[];
     Zk = zeros(2*length(tempZ.id), 1);
     Hk = [];
-    Zk(1:2:end) = tempZ.angle;
-    Zk(2:2:end) = tempZ.distance;
+    Zk(1:2:end) = tempZ.distance;
+    Zk(2:2:end) = tempZ.angle;
     apoloResetOdometry('Marvin');
 
     % Nuevo ciclo, k-1 = k.
@@ -70,6 +70,7 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     Xk = X_k + Wk*Yk;
     Pk = (eye(3)-Wk*Hk)*P_k;
     
+
     %Sólo para almacenarlo
     % Xestimado(:,l) = Xk;
     % Pacumulado(1,l) = Pk(1,1);
