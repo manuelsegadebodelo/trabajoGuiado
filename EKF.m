@@ -9,8 +9,9 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     
     % Observación de las balizas
     tempZ = apoloGetLaserLandMarks('LMS100');
+    Zk_=[];
     Zk = zeros(2*length(tempZ.id), 1);
-    Hk = zeros(2*length(tempZ.id), 3);
+    Hk = [];
     Zk(1:2:end) = tempZ.angle;
     Zk(2:2:end) = tempZ.distance;
     apoloResetOdometry('Marvin');
@@ -20,7 +21,7 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     Pk_1 = Pk;
     
     % Prediccion del estado
-    X_k = [(Xk_1(1) + Uk(1)*cos(Xk_1(3)) - Uk(2)*sin(Xk_1(3))); % está mal creo
+    X_k = [(Xk_1(1) + Uk(1)*cos(Xk_1(3)) - Uk(2)*sin(Xk_1(3)));
            (Xk_1(2) + Uk(1)*sin(Xk_1(3)) + Uk(2)*cos(Xk_1(3)));
            (Xk_1(3) + Uk(3))];
 
@@ -43,11 +44,11 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
         theta = atan2(yL-X_k(2), xL-X_k(1)) - X_k(3);
 
         Z = [d; theta];
-        H(2*i-1) = [(X_k(1)-xL)/d (X_k(2)-yL)/d 0];
-        H(2*i) = [(xL-X_k(1)/d^2) (yL-X_k(2))/d^2 -1];
+        H1 = [(X_k(1)-xL)/d (X_k(2)-yL)/d 0];
+        H2 = [(xL-X_k(1)/d^2) (yL-X_k(2))/d^2 -1];
        
         Zk_ = [Zk_; Z];
-        Hk(i) = H_;
+        Hk =[Hk; H1; H2];
     end
 
     % Comparación
