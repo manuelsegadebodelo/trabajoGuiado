@@ -15,8 +15,6 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     integral_error_v = 0;
     integral_error_theta = 0;
 
-    landmarks = [1 0; 2 3];
-    nLandmarks = size(landmarks,1);
     theta0 = 3*pi/4;
     
 
@@ -33,7 +31,6 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     % Cargar parámetros de Kalman
     load("Q.mat");
     load("R.mat");
-    Qk_1 = Q;
 
     % Inicializamos la posición inicial y su covarianza
     pos0 = apoloGetLocationMRobot('Marvin');
@@ -73,21 +70,10 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             % Coger la odometría
             Uk = apoloGetOdometry('Marvin');
             odometria_history(end + 1, :) = Uk;
-            % Medición del sistema
-            % Balizas
-            % Zk = apoloGetLaserLandMark();  % Este sería el dato que recibe del sensor
             
-            % Llamada al filtrso de Kalman para actualizar la estimación de la posición
-            run('EKF.m');
-            [Xk, Pk] = filtro_kalman(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);
+            % Llamada al filtro de Kalman para actualizar la estimación de la posición
+            [Xk, Pk] = EKF(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);
 
-            % Extraer las posiciones estimadas de Xk
-%             x = x + v * cos(theta) * dt;
-%             y = y + v * sin(theta) * dt;
-%             theta = theta + w * dt;
-               % x=odometry(1);
-               % y=odometry(2);
-               % theta=odometry(3);
             x = Xk(1);
             y = Xk(2);
             theta = Xk(3);

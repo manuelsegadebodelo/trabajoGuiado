@@ -1,21 +1,9 @@
+function [Xk, Pk] = EKF(Xk, Pk, Q, R)
 % Varianza del ruido del proceso 
-% Qk_1 = Q;
+Qk_1 = Q;
 
 %N balizas y posición
-%landmarks = [1 0; 2 3];
-% nLandmarks = size(landmarks,1);
-
-% Inicializamos la posición inicial y su covarianza
-% pos0 = apoloGetLocationMRobot('Marvin');
-% xini = pos0(1);
-% yini = pos0(2);
-% thetaini = pos0(4);
-% Xk = [xini; yini; thetaini];
-
-% Pxini = 0.0;
-% Pyini = 0.0;
-% Pthetaini = 0.0;
-% Pk = [Pxini 0 0; 0 Pyini 0 ; 0 0 Pthetaini];
+landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
 
 % Algoritmo
     
@@ -84,8 +72,8 @@
     Pk = (eye(3)-Wk*Hk)*P_k;
     
     %Sólo para almacenarlo
-    Xestimado(:,l) = Xk;
-    Pacumulado(1,l) = Pk(1,1);
-    Pacumulado(2,l) = Pk(2,2);
-    Pacumulado(3,l) = Pk(3,3);
+    % Xestimado(:,l) = Xk;
+    % Pacumulado(1,l) = Pk(1,1);
+    % Pacumulado(2,l) = Pk(2,2);
+    % Pacumulado(3,l) = Pk(3,3);
 % end 
