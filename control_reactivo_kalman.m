@@ -72,7 +72,7 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             odometria_history(end + 1, :) = Uk;
             
             % Llamada al filtro de Kalman para actualizar la estimación de la posición
-            [Xk, Pk] = EKF(Xk, Pk, Zk, Qk_1, Rk, dt,v,w);
+            [Xk, Pk] = EKF(Xk, Pk, Uk, Q, R);
 
             x = Xk(1);
             y = Xk(2);

@@ -1,4 +1,4 @@
-function [Xk, Pk] = EKF(Xk, Pk, Q, R)
+function [Xk, Pk] = EKF(Xk, Pk, Uk, Q, R)
 % Varianza del ruido del proceso 
 Qk_1 = Q;
 
@@ -13,8 +13,6 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     Hk = zeros(2*length(tempZ.id), 3);
     Zk(1:2:end) = tempZ.angle;
     Zk(2:2:end) = tempZ.distance;
-
-    Uk = (apoloGetOdometry('Marvin'))';
     apoloResetOdometry('Marvin');
 
     % Nuevo ciclo, k-1 = k.
@@ -76,4 +74,4 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     % Pacumulado(1,l) = Pk(1,1);
     % Pacumulado(2,l) = Pk(2,2);
     % Pacumulado(3,l) = Pk(3,3);
-% end 
+end 
