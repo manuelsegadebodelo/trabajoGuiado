@@ -34,18 +34,19 @@
     Pk_1 = Pk;
     
     % Prediccion del estado
-    X_k = [(Xk_1(1) + Uk(1)); % está mal creo
-           (Xk_1(2) + Uk(2));
+    X_k = [(Xk_1(1) + Uk(1)*cos(Xk_1(3)) - Uk(2)*sin(Xk_1(3))); % está mal creo
+           (Xk_1(2) + Uk(1)*sin(Xk_1(3)) + Uk(2)*cos(Xk_1(3)));
            (Xk_1(3) + Uk(3))];
 
-    Ak = [1 0 0; %esta hay que cambiarla por el jacobiano de x
-          0 1 0;
-          0 0 1];
-    Bk = [1 0 0;
-          0 1 0;
+    Fk = [1 0 (-1)*Xk_1(1)*sin(Xk_1(3))-Xk_1(2)*cos(Xk_1(3)); %esta hay que cambiarla por el jacobiano de x
+          0 1 Xk_1(1)*cos(Xk_1(3))-Xk_1(2)*sin(Xk_1(3));
           0 0 1];
 
-    P_k = Ak*Pk_1*((Ak)') + Bk*Qk_1*((Bk)');
+    Bk = [cos(Xk_1(3)) (-1)*sin(Xk_1(3)) 0;
+          sin(Xk_1(3)) cos(Xk_1(3)) 0;
+          0 0 1];
+
+    P_k = Fk*Pk_1*((Fk)') + Bk*Qk_1*((Bk)');
 
     % Predicción de la medida. Depende de la posición de las balizas y de la
     %predicción del estado
