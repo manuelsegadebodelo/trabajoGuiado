@@ -69,11 +69,4 @@ landmarks = [-7.5 8; 8.6 8; -1 8; -6 0; 6.5 0; 8.5 -8.5; -2.5 -8.5];
     % Corrección
     Xk = X_k + Wk*Yk;
     Pk = (eye(3)-Wk*Hk)*P_k;
-    
-
-    %Sólo para almacenarlo
-    % Xestimado(:,l) = Xk;
-    % Pacumulado(1,l) = Pk(1,1);
-    % Pacumulado(2,l) = Pk(2,2);
-    % Pacumulado(3,l) = Pk(3,3);
 end 

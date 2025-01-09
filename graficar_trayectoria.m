@@ -1,4 +1,4 @@
-function graficar_trayectoria(t_history, x_history, y_history, v_history, w_history, laser_history, puntos_objetivo)
+function graficar_trayectoria(t_history, x_history, y_history, v_history, w_history, laser_history, puntos_objetivo, x_real, y_real)
     % Función para graficar la trayectoria, velocidades y lecturas láser del robot.
     %
     % Parámetros:
@@ -48,8 +48,6 @@ function graficar_trayectoria(t_history, x_history, y_history, v_history, w_hist
     title('Lecturas de los Sensores Láser');
     legend('u0', 'ul1', 'ul2');
     grid on;
-    
-
 
     % Figura de la trayectoria en el plano XY
     figure;
@@ -61,4 +59,23 @@ function graficar_trayectoria(t_history, x_history, y_history, v_history, w_hist
     title('Trayectoria del Robot en el Plano XY');
     legend('Trayectoria', 'Puntos objetivo');
     grid on;
+
+    figure;
+    plot(x_history, y_history, 'b.-');
+    hold on;
+    plot(x_real, y_real, 'ro', 'MarkerSize', 10, 'LineWidth', 2 )
+    xlabel('Posición X (m)');
+    ylabel('Posición Y (m)');
+    title('Comparativa posición real y estimada');
+    error = [];
+    index = [];
+    
+    for i = 1:length(x_history)
+        error =[error; sqrt((x_history(i)-x_real(i))^2 + (y_history(i)-y_real(i))^2)] ;
+        index = [index; i];
+    end
+    figure;
+    plot(index, error, 'b.-');
+    ylabel('Error');
+    title('Error del filtro de Kalman');
 end

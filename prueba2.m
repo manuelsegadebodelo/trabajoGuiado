@@ -21,6 +21,6 @@ apoloResetOdometry('Marvin');
 apoloUpdate();
 
 % Llamar a la función para seguir el camino con las orientaciones especificadas
-[x_history, y_history, t_history, v_history, w_history, odometria_history, ultrasonic_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo);
+[x_history, y_history, x_real, y_real, t_history, v_history, w_history, odometria_history, ultrasonic_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo);
 
-graficar_trayectoria(t_history, x_history, y_history, v_history, w_history,ultrasonic_history, puntos_objetivo)
+graficar_trayectoria(t_history, x_history, y_history, v_history, w_history,ultrasonic_history, puntos_objetivo, x_real, y_real)

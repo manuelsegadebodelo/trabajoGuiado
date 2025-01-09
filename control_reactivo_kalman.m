@@ -1,4 +1,4 @@
-function [x_history, y_history, t_history, v_history, w_history, odometria_history, ultrasonic_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo)
+function [x_history, y_history, x_real, y_real, t_history, v_history, w_history, odometria_history, ultrasonic_history] = control_reactivo_kalman(pos_inicial, puntos_objetivo)
     % Controlador diferencial para un robot que sigue varios puntos objetivo con control reactivo.
 
     % Parámetros del robot
@@ -15,19 +15,18 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
     integral_error_v = 0;
     integral_error_theta = 0;
 
-    theta0 = 3*pi/4;
-    
-
     % Historias para almacenar datos
     t_history = 0;
     x_history = x;
     y_history = y;
+    x_real = x;
+    y_real = y;
     v_history = 0;
     w_history = 0;
     odometry = [x, y, theta];
     odometria_history = odometry;
     ultrasonic_history = [0, 0, 0];
-
+    
     % Cargar parámetros de Kalman
     load("calibracion/Q.mat");
     load("calibracion/R.mat");
@@ -77,8 +76,11 @@ function [x_history, y_history, t_history, v_history, w_history, odometria_histo
             x = Xk(1);
             y = Xk(2);
             theta = Xk(3);
+            X_R = apoloGetLocationMRobot('Marvin');
+            x_r = X_R(1);
+            y_r = X_R(2);
             % Almacenar datos históricos
-            [t_history, x_history, y_history, v_history, w_history] = registrar_datos(t_history, x_history, y_history, v_history, w_history, dt, x, y, v, w);
+            [t_history, x_history, y_history, x_real, y_real, v_history, w_history] = registrar_datos(t_history, x_history, y_history, x_real, y_real, v_history, w_history, dt, x, y, x_r, y_r, v, w);
 
             % Mostrar estado actual
             fprintf('Posición: (%.2f, %.2f), Orientación: %.2f rad, Distancia al objetivo: %.2f\n', x, y, theta, rho);
@@ -166,11 +168,13 @@ function [repulsion_x, repulsion_y] = calcular_repulsion(ultrasonics)
     end
 end
 
-function [t_history, x_history, y_history, v_history, w_history] = registrar_datos(t_history, x_history, y_history, v_history, w_history, dt, x, y, v, w)
+function [t_history, x_history, y_history, x_real, y_real, v_history, w_history] = registrar_datos(t_history, x_history, y_history, x_real, y_real, v_history, w_history, dt, x, y, x_r, y_r, v, w)
     % Registra datos históricos para su posterior análisis.
     t_history(end + 1) = t_history(end) + dt;
     x_history(end + 1) = x;
     y_history(end + 1) = y;
+    x_real(end + 1) = x_r;
+    y_real(end + 1) = y_r;
     v_history(end + 1) = v;
     w_history(end + 1) = w;
 end
